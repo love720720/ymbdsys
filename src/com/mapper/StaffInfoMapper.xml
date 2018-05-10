@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.StaffInfoMapper">
+    <update id="updatePassword" parameterType="StaffInfo">
+        UPDATE
+	    	staff
+	    SET
+	    	password = #{password}
+	    WHERE
+			id = #{id}
+    </update>
+    <update id="updateLastLoginTime" parameterType="StaffInfo">
+        UPDATE
+	    	staff_info si
+	    SET
+	    	si.last_login_time = #{lastLoginTime},
+	    	si.login_num = si.login_num + 1
+	    WHERE
+			si.id = #{id}
+    </update>
+    <select id="getStaffAsName" parameterType="String" resultType="com.pojo.Staff">
+        SELECT
+			*
+		FROM
+			staff
+		WHERE
+			user_name = #{userName}
+    </select>
+    <insert id="insertStaffInfo" parameterType="StaffInfo" useGeneratedKeys="true" keyProperty="id">
+     	INSERT INTO
+     		staff_info
+		(
+			name,
+			gender,
+			phone,
+			last_login_time,
+			login_num
+		)
+		VALUES
+		(
+			#{name},
+			#{gender},
+			#{phone},
+			#{lastLoginTime},
+			#{loginNum}
+		)
+	</insert>
+    <insert id="insertStaff" parameterType="com.pojo.Staff" useGeneratedKeys="true" keyProperty="id">
+     	INSERT INTO
+     		staff
+		(
+			staff_info_⁯id,
+			user_name,
+			password,
+			register_time,
+			stat
+		)
+		VALUES
+		(
+			#{staffInfoId},
+			#{userName},
+			#{password},
+			#{registerTime},
+			#{stat}
+		)
+    </insert>
+    <delete id="deleteStaffInfo" parameterType="int">
+        DELETE FROM staff_info WHERE id = #{id}
+    </delete>
+	<select id="getStaffInfoAsId" resultType="StaffInfo" parameterType="int">
+		SELECT
+			si.id id,
+			r.id roleId
+		FROM
+			staff_info si
+		LEFT JOIN
+			staff_info_role sir
+		ON
+			si.id = sir.staff_info_id
+		LEFT JOIN
+			role r
+		ON
+			r.id = sir.role_id
+		WHERE
+			si.id = #{id}
+	</select>
+	<select id="getStaffInfo" resultType="StaffInfo" parameterType="com.pojo.Staff">
+		SELECT
+			si.id id,
+			si.name name,
+			si.gender gender,
+			si.phone phone,
+			from_unixtime(si.last_login_time /1000) lastLoginTimeStr,
+			s.password password,
+			s.user_name userName,
+			from_unixtime(s.register_time /1000) registerTimeStr,
+			si.login_num loginNum
+		FROM
+			staff s
+		LEFT JOIN
+			staff_info si
+		ON
+			s.staff_info_⁯id = si.id
+		WHERE
+			s.stat = #{stat}
+		AND
+			s.user_name = #{userName}
+		AND
+			s.password = #{password}
+	</select>
+	<select id="getCount" resultType="int">
+	    SELECT
+			COUNT(id)
+		FROM
+			staff_info
+	</select>
+	<select id="staffInfoList" resultType="StaffInfo" parameterType="com.pojo.PageBean">
+	    SELECT
+			si.id id,
+			si.name name,
+			si.gender gender,
+			si.phone phone,
+			from_unixtime(si.last_login_time /1000) lastLoginTimeStr,
+			s.stat stat
+		FROM
+			staff_info si
+		LEFT JOIN
+			staff s
+		ON
+			s.staff_info_⁯id = si.id
+		ORDER BY
+			si.id DESC
+		LIMIT
+			#{index},#{count}
+	</select>
+	<select id="getStaff" parameterType="int" resultType="com.pojo.Staff">
+	    SELECT
+		    s.id id,
+		    s.staff_info_⁯id staffInfoId,
+			s.stat stat
+		FROM
+			staff s
+		WHERE
+			s.id = #{id}
+	</select>
+	<update id="updateStaff" parameterType="com.pojo.Staff">
+	    UPDATE
+	    	staff s
+	    SET
+	    	s.stat = #{stat}
+	    WHERE
+			s.id = #{id}
+	</update>
+</mapper>

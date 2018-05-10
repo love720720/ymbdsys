@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.LogMapper">
+    <delete id="clearAccessLog">
+        TRUNCATE TABLE access_log
+    </delete>
+	<select id="getAccessCount" resultType="int">
+		SELECT
+			COUNT(id)
+		FROM
+			access_log
+		 ORDER BY id
+	</select>
+	<select id="getAccessLog" resultType="Log" parameterType="com.pojo.PageBean">
+		SELECT
+			time time,
+			from_unixtime(time /1000) timeInfo,
+			url url,
+			ip ip,
+			user_id userId,
+			user_name userName
+		FROM
+			access_log
+		ORDER BY
+			id DESC
+		LIMIT
+			#{index},#{count}
+	</select>
+</mapper>

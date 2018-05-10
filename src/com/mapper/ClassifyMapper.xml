@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.ClassifyMapper">
+	<select id="getClassify" resultType="Classify" parameterType="int">
+		SELECT
+			id id,
+			name name,
+			sort sort
+		FROM
+			classify
+		WHERE
+			id = #{id}
+	</select>
+	<select id="classifyList" resultType="Classify">
+		SELECT
+			id id,
+			name name,
+			sort sort
+		FROM
+			classify
+		ORDER BY
+			sort
+	</select>
+	<insert id="insertClassify" parameterType="Classify" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+			classify
+		(
+			name,
+			sort
+		)
+		VALUES
+		(
+			#{name},
+			#{sort}
+		)
+	</insert>
+	<update id="updateClassify" parameterType="Classify">
+	 	UPDATE
+	 		classify
+	 	SET
+			name = #{name},
+			sort = #{sort}
+		WHERE
+			id = #{id}
+	</update>
+	<delete id="deleteClassify" parameterType="int">
+		DELETE FROM classify WHERE id = #{id}
+	</delete>
+</mapper>

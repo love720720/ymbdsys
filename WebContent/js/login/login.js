@@ -1,0 +1,9 @@
+
+var loginUserName,loginUserPassword;var form;$(function(){$("#loginUserName").focus();form=window.location.search;$("body").iealert();$("#button-login").click(function(){loginUserName=$("#loginUserName").val();loginUserPassword=$("#loginUserPassword").val();var boolean=login(loginUserName,loginUserPassword);if(boolean){ajaxLogin(loginUserName,loginUserPassword);}});});function keyDownName(event){event=event||window.event;if((event.which==13)||(event.keyCode==13)){loginUserName=$("#loginUserName").val();if(loginUserName==null||loginUserName.length<=0||loginUserName=="账号："){$("#loginError").text("请输入账号");$("#loginUserName").focus();return;}
+$("#loginUserPassword").focus();$("#pwdPlaceholder").focus();}}
+function keyDownPass(event){event=event||window.event;if((event.which==13)||(event.keyCode==13)){loginUserName=$("#loginUserName").val();loginUserPassword=$("#loginUserPassword").val();var boolean=login(loginUserName,loginUserPassword);if(boolean){ajaxLogin(loginUserName,loginUserPassword);}}}
+function login(loginUserName,loginUserPassword){$("#loginError").html("<img src='images/circleLoad.gif'/><font color='#898989' class='_font'>正在玩命加载...</font>");if(loginUserName==null||loginUserName.length<=0){$("#loginError").text("请输入账号");$("#loginUserName").focus();return false;}
+if(loginUserPassword==null||loginUserPassword.length<=0){$("#loginError").text("请输入密码");$("#loginUserPassword").focus();$("#pwdPlaceholder").focus();return false;}
+return true;}
+function ajaxLogin(loginUserName,loginUserPassword){$.ajax({type:"post",dataType:"json",url:"login.htm",data:{"loginUserName":loginUserName,"loginUserPassword":loginUserPassword},success:function(data){if(data){if(form!=null&&form.length>0){form=form.replace("?","");}
+window.location="loginForm.htm?form="+form;return;}else{$("#loginError").text("账号或密码错误 请重试...");return;}},error:function(a,b,c){alert(b);}});return;}

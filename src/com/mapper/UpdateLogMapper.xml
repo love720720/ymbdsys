@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.UpdateLogMapper">
+	<select id="getCount" resultType="int">
+		SELECT COUNT(id) FROM update_log;
+	</select>
+	<select id="loadLog" resultType="UpdateLog" parameterType="java.util.Map">
+		SELECT
+			id id,
+			stat stat,
+			staff_info_name staffInfoName,
+			content content,
+			create_time createTime,
+			from_unixtime(create_time /1000) createTimeInfo
+		FROM
+			update_log
+		ORDER BY
+			create_time DESC
+		LIMIT
+			#{index},#{count}
+	</select>
+	<select id="updateLogList" resultType="UpdateLog">
+		SELECT
+			id id,
+			stat stat,
+			staff_info_name staffInfoName,
+			content content,
+			create_time createTime,
+			from_unixtime(create_time /1000) createTimeInfo
+		FROM
+			update_log
+		ORDER BY
+			create_time DESC
+		LiMIT 5
+	</select>
+	<insert id="insertUpdateLog" parameterType="UpdateLog" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+			update_log
+		(
+			stat,
+			staff_info_id,
+			staff_info_name,
+			create_time,
+			content
+		)
+		VALUES
+		(
+			#{stat},
+			#{staffInfoId},
+			#{staffInfoName},
+			#{createTime},
+			#{content}
+		)
+	</insert>
+</mapper>

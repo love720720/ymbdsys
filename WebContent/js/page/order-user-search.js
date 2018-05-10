@@ -1,0 +1,6 @@
+
+$(function(){$("#select_Id").select2({allowClear:true,placeholder:"请输入姓名 按ENTER",minimumInputLength:2,ajax:{type:"post",dataType:"json",url:"selectOrderUserName.htm",quietMillis:500,data:function(term,page){return{name:term,page_limit:10,apikey:"NoUse"};},results:function(data,page){return{results:data.userNames};}},formatResult:movieFormatResult,formatSelection:movieFormatSelection});});function movieFormatResult(userNames){return userNames.name;}
+function movieFormatSelection(userNames,container){var form=document.createElement("form");document.body.appendChild(form);var input=document.createElement("input");input.type="hidden";input.value=userNames.name;input.name="name";form.appendChild(input);form.action="orderUserSearch.htm";form.method="post";form.submit();return userNames.name;}
+function detail(id){if(id<=0){alertDanger();return;}
+location.href="detailOrder.htm?id="+id;return;}
+function alertDanger(title,content){$("body").alert({type:"danger",title:title||"提示",content:content||"参数出错 请返回重试",btntext:"确定",modal:true,draggabled:false,even:"click"});return;}

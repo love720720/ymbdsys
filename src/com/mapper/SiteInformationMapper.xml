@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.SiteInformationMapper">
+	<select id="getSiteInformation" resultType="SiteInformation" parameterType="int">
+		SELECT
+			urgency_notice urgencyNotice,
+			notice notice,
+			dispatch_explain dispatchExplain,
+			time_explain timeExplain,
+			phone phone,
+			qq qq,
+			address address,
+			postcode postcode,
+			bottom_explain bottomExplain
+		FROM
+			site_information
+		LIMIT 1
+	</select>
+	<insert id="insertSiteInformation" parameterType="SiteInformation" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+			site_information
+		(
+			urgency_notice,
+			notice,
+			dispatch_explain,
+			time_explain,
+			phone,
+			qq,
+			address,
+			postcode,
+			bottom_explain
+		)
+		VALUES
+		(
+			#{urgencyNotice},
+			#{notice},
+			#{dispatchExplain},
+			#{timeExplain},
+			#{phone},
+			#{qq},
+			#{address},
+			#{postcode},
+			#{bottomExplain}
+		)
+	</insert>
+	<delete id="truncateSiteInformation">
+	    TRUNCATE TABLE site_information
+	</delete>
+</mapper>

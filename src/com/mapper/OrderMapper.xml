@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.OrderMapper">
+	<select id="getOrderAsUser" resultType="Order" parameterType="String">
+		SELECT
+			o.id id,
+			o.no no,
+			o.user_name userName,
+			o.phone phone,
+			o.send_time sendTime,
+			o.price_nows priceNows,
+			o.taste taste,
+			o.stat stat
+		FROM
+			`order` o
+		WHERE
+			user_name = #{name}
+		ORDER BY
+			o.id DESC
+	</select>
+    <select id="getSelectOrderUserName" resultType="Order" parameterType="java.util.Map">
+        SELECT
+			o.id id,
+			o.user_id userId,
+			o.user_name userName,
+			o.phone phone,
+			o.address address
+		FROM
+			`order` o
+		WHERE
+			o.user_name LIKE '%${name}%'
+		ORDER BY
+			o.id DESC
+		LIMIT 10
+    </select>
+	<insert id="insertOrder" parameterType="Order" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+			`order`
+		(
+			print_num,
+			`no`,
+			user_id,
+			user_name,
+			phone,
+			address,
+			create_time,
+			send_time,
+			price_olds,
+			price_nows,
+			taste,
+			remark,
+			stat,
+			flag,
+			discount,
+			update_time
+		)
+		VALUES
+		(
+			#{printNum},
+			#{no},
+			#{userId},
+			#{userName},
+			#{phone},
+			#{address},
+			#{createTime},
+			#{sendTime},
+			#{priceOlds},
+			#{priceNows},
+			#{taste},
+			#{remark},
+			#{stat},
+			#{flag},
+			#{discount},
+			#{updateTime}
+		)
+	</insert>
+	<update id="updateOrder" parameterType="Order">
+		UPDATE `order` SET
+			user_name = #{userName},
+			phone = #{phone},
+			address = #{address},
+			send_time = #{sendTime},
+			price_olds = #{priceOlds},
+			price_nows = #{priceNows},
+			taste = #{taste},
+			remark = #{remark},
+			discount = #{discount},
+			record = #{record},
+			update_time = #{updateTime}
+		WHERE
+			id = #{id}
+	</update>
+	<select id="getOrderToNo" resultType="Order" parameterType="String">
+		SELECT
+			o.no no
+		FROM
+			`order` o
+		WHERE
+			o.no = #{no}
+	</select>
+	<select id="getProductStatistics" resultType="com.pojo.OrderStatistics" parameterType="String">
+		SELECT
+			p. NO productNo,
+			p. NAME productName,
+			SUM(op.by_num) productCount,
+			SUM(op.price_nows) priceNows
+		FROM
+			product p,
+			order_product op
+		WHERE
+			p.id = op.product_id
+		AND
+			op.order_id IN (${value})
+		GROUP BY
+			p.id
+	</select>
+	<select id="searchOrderList" resultType="Order" parameterType="java.util.Map">
+		SELECT
+			o.id id,
+			o.no no,
+			o.user_name userName,
+			o.address address,
+			o.phone phone,
+			o.price_nows priceNows,
+			from_unixtime(o.create_time /1000) createTimeInfo
+		FROM
+			`order` o
+		WHERE
+			o.create_time >= ${searchStartTime}
+		AND
+			o.create_time &lt; ${searchEndTime}
+		ORDER BY
+			o.id
+	</select>
+	<select id="getOrderStatisticsDetail" resultType="com.pojo.OrderStatistics" parameterType="java.util.Map">
+		SELECT
+			t.productNo productNo,
+			t.productName productName,
+			t.productCount productCount,
+			t.priceNows priceNows
+		FROM
+			(
+				SELECT
+					p.NO productNo,
+					p.NAME productName,
+					SUM(op.by_num) productCount,
+					SUM(op.price_nows) priceNows
+				FROM
+					product p
+				LEFT JOIN
+					order_product op
+				JOIN
+					`order` o ON o.id = op.order_id
+				AND
+					o.create_time >= ${startTime}
+				AND
+					o.create_time &lt; ${endTime}
+				ON
+					p.id = op.product_id
+				GROUP BY
+					p.id
+			) t
+		WHERE
+			t.priceNows > 0
+	</select>
+	<select id="getLastOrder" resultType="Order" parameterType="long">
+		SELECT
+			o.no no
+		FROM
+			`order` o
+		WHERE
+			o.create_time >= #{currentTime}
+		ORDER BY
+			o.id DESC
+		LIMIT 1
+	</select>
+	<delete id="deleteOrder" parameterType="int">
+		DELETE FROM `order` WHERE id = #{id}
+	</delete>
+	<select id="getCount" resultType="int">
+		SELECT COUNT(id) FROM `order` ORDER BY id
+	</select>
+	<select id="getOrderTodayCount" resultType="int" parameterType="long">
+		SELECT
+			COUNT(o.id)
+		FROM
+			`order` o
+		WHERE
+			o.create_time > #{createTime}
+		ORDER BY
+			id
+	</select>
+	<select id="orderList" resultType="Order" parameterType="com.pojo.PageBean">
+		SELECT
+			o.id id,
+			o.no no,
+			o.user_name userName,
+			o.phone phone,
+			o.send_time sendTime,
+			o.price_nows priceNows,
+			o.taste taste,
+			o.stat stat
+		FROM
+			`order` o
+		ORDER BY
+			o.id DESC
+		LIMIT
+			#{index},#{count}
+	</select>
+	<select id="orderTodayList" resultType="Order" parameterType="com.pojo.PageBean">
+		SELECT
+			o.id id,
+			o.no no,
+			o.user_name userName,
+			o.phone phone,
+			o.send_time sendTime,
+			o.price_nows priceNows,
+			o.taste taste,
+			o.print_num printNum,
+			o.stat stat
+		FROM
+			`order` o
+		WHERE
+			o.create_time > #{createTime}
+		ORDER BY
+			o.id DESC
+		LIMIT
+			#{index},#{count}
+	</select>
+	<select id="getOrder" parameterType="int" resultType="Order">
+		SELECT
+			o.id id,
+			o.no no,
+			o.user_id userId,
+			o.user_name userName,
+			o.create_time  createTime,
+			from_unixtime(o.create_time /1000) createTimeInfo,
+			o.update_time updateTime,
+			from_unixtime(o.update_time /1000) updateTimeInfo,
+			o.phone phone,
+			o.send_time sendTime,
+			o.price_olds priceOlds,
+			o.price_nows priceNows,
+			o.discount discount,
+			o.remark remark,
+			o.taste taste,
+			o.flag flag,
+			o.address address,
+			o.stat stat,
+			record record
+		FROM
+			`order` o
+		WHERE
+			id = #{id}
+		ORDER BY
+			o.id
+	</select>
+	<update id="updateOrderPrintNum" parameterType="int">
+	 	UPDATE
+	 		`order`
+	 	SET
+			print_num = print_num + 1
+		WHERE
+			id = #{id}
+	</update>
+</mapper>

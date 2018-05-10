@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.RoleMapper">
+	<select id="getRoleList" resultType="Role">
+	    SELECT
+			id id,
+			name name,
+			level level,
+			sort sort
+		FROM
+			role
+		ORDER BY
+			sort
+    </select>
+	<select id="getRoleAsStaffInfo" resultType="Role" parameterType="int">
+		SELECT
+			r.id id,
+			r.name name,
+			r.level level,
+			r.sort sort
+		FROM
+			role r
+		LEFT JOIN
+			staff_info_role sir
+		ON
+			r.id = sir.role_id
+		WHERE
+			sir.staff_info_id = #{staffInfoId}
+		LIMIT 1
+	</select>
+	<select id="getRole" resultType="Role" parameterType="int">
+		SELECT
+			id id,
+			name name,
+			level level,
+			sort sort
+		FROM
+			role
+		WHERE
+			id = #{id}
+	</select>
+	<select id="getCount" resultType="int">
+		SELECT
+			COUNT(id)
+		FROM
+			role
+		ORDER BY
+			id
+	</select>
+	<select id="roleList" resultType="Role" parameterType="com.pojo.PageBean">
+		SELECT
+			id id,
+			name name,
+			level level,
+			sort sort
+		FROM
+			role
+		ORDER BY
+			sort
+		LIMIT
+			#{index},#{count}
+	</select>
+	<insert id="insertRole" parameterType="Role" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+			role
+		(
+			name,
+			level,
+			sort
+		)
+		VALUES
+		(
+			#{name},
+			#{level},
+			#{sort}
+		)
+	</insert>
+	<update id="updateRole" parameterType="Role">
+	 	UPDATE
+	 		role
+	 	SET
+			name = #{name},
+			level = #{level},
+			sort = #{sort}
+		WHERE
+			id = #{id}
+	</update>
+	<delete id="deleteRole" parameterType="int">
+		DELETE FROM role WHERE id = #{id}
+	</delete>
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.TasteMapper">
+	<select id="getTaste" resultType="Taste" parameterType="Taste">
+		SELECT
+			id id,
+			name name,
+			sort sort
+		FROM
+			taste
+		WHERE
+			id = #{id}
+	</select>
+	<select id="tasteList" resultType="Taste">
+		SELECT
+			id id,
+			name name,
+			sort sort
+		FROM
+			taste
+		ORDER BY
+			sort
+	</select>
+	<insert id="insertTaste" parameterType="Taste" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+			taste
+		(
+			name,
+			sort
+		)
+		VALUES
+		(
+			#{name},
+			#{sort}
+		)
+	</insert>
+	<update id="updateTaste" parameterType="Taste">
+	 	UPDATE
+	 		taste
+	 	SET
+			name = #{name},
+			sort = #{sort}
+		WHERE
+			id = #{id}
+	</update>
+	<delete id="deleteTaste" parameterType="int">
+		DELETE FROM taste WHERE id = #{id}
+	</delete>
+</mapper>

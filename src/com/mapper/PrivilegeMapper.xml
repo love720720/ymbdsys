@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.PrivilegeMapper">
+    <select id="getPrivilege" resultType="Privilege" parameterType="int">
+        SELECT
+			p.id id,
+			p.`name` `name`,
+			p.parent_id parentId,
+			p.url url,
+			p.is_tree isTree,
+			p.is_button isButton,
+			p.target target,
+			p.display display,
+			p.code code,
+			p.sort sort
+		FROM
+			privilege p
+		WHERE
+			p.id = #{id}
+    </select>
+    <select id="getRolePrivilege" resultType="Privilege" parameterType="int">
+        SELECT
+			p.id id,
+			p.`name` `name`,
+			p.parent_id parentId,
+			p.url url,
+			p.is_tree isTree,
+			p.is_button isButton,
+			p.target target,
+			p.code code,
+			p.sort sort
+		FROM
+			privilege p
+		LEFT JOIN
+			role_privilege rp
+		ON
+			p.id = rp.privilege_id
+		LEFT JOIN
+			role r
+		ON
+			r.id = rp.role_id
+		WHERE
+			r.id = #{roleId}
+		ORDER BY
+			p.sort
+    </select>
+    <select id="getStaffPrivilege" resultType="Privilege" parameterType="int">
+        SELECT
+			p.id id,
+			p.`name` `name`,
+			p.parent_id parentId,
+			p.url url,
+			p.is_tree isTree,
+			p.is_button isButton,
+			p.target target,
+			p.`code` `code`,
+			p.sort sort,
+			p.display display,
+			CASE
+		WHEN
+			t.id > 0
+		THEN
+			1
+		ELSE
+			0
+		END
+			isTrue
+		FROM
+			privilege p
+		LEFT JOIN (
+			SELECT
+				p.id id,
+				p.`name` `name`,
+				p.parent_id parentId,
+				p.url url,
+				p.is_tree isTree,
+				p.is_button isButton,
+				p.target target,
+				p.`code` `code`,
+				p.sort sort,
+				p.display display
+			FROM
+				privilege p
+			LEFT JOIN
+				role_privilege rp
+			ON
+				p.id = rp.privilege_id
+			LEFT JOIN
+				role r
+			ON
+				rp.role_id = r.id
+			LEFT JOIN
+				staff_info_role sir
+			ON
+				sir.role_id = r.id
+			WHERE
+				sir.staff_info_id = #{staffInfoId}
+		) t
+		ON
+			p.id = t.id
+		ORDER BY
+			p.sort
+    </select>
+	<select id="getPrivilegeAsParentId" resultType="Privilege" parameterType="int">
+		SELECT
+			p.id id,
+			p.`name` `name`,
+			p.parent_id parentId,
+			p.url url,
+			p.is_tree isTree,
+			p.is_button isButton,
+			p.target target,
+			p.code code,
+			p.sort sort
+		FROM
+			privilege p
+		WHERE
+			p.parent_id = #{privilegeId}
+		ORDER BY
+			p.sort
+	</select>
+	<select id="privilegeList" resultType="Privilege">
+		SELECT
+			p.id id,
+			p.`name` `name`,
+			p.parent_id parentId,
+			p.url url,
+			p.is_tree isTree,
+			p.is_button isButton,
+			p.target target,
+			p.display display,
+			p.code code,
+			p.sort sort
+		FROM
+			privilege p
+		ORDER BY
+			p.sort
+	</select>
+	<insert id="insertPrivilege" parameterType="Privilege" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+			privilege
+		(
+			`name`,
+			parent_id,
+			url,
+			is_tree,
+			target,
+			is_button,
+			display,
+			code,
+			sort
+		)
+		VALUES
+		(
+			#{name},
+			#{parentId},
+			#{url},
+			#{isTree},
+			#{target},
+			#{isButton},
+			#{display},
+			#{code},
+			#{sort}
+		)
+	</insert>
+	<update id="updatePrivilege" parameterType="Privilege">
+	 	UPDATE
+	 		privilege p
+	 	SET
+			p.`name` = #{name},
+			p.url = #{url},
+			p.is_tree = #{isTree},
+			p.target = #{target},
+			p.is_button = #{isButton},
+			p.display = #{display},
+			p.code = #{code},
+			p.sort = #{sort}
+		WHERE
+			p.id = #{id}
+	</update>
+	<delete id="deletePrivilege" parameterType="int">
+		DELETE FROM privilege WHERE id = #{id}
+	</delete>
+</mapper>
