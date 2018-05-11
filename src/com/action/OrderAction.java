@@ -257,10 +257,10 @@ public class OrderAction {
 				}
 				order.setProductList(productList);
 			}
-			OutputStream out = response.getOutputStream();
 			response.reset();
 			response.setHeader("Content-disposition", "attachment; filename=" + new String(fileName.getBytes("gb2312"), "ISO8859-1"));// 设定输出文件头
 			response.setContentType("application/msexcel");
+			OutputStream out = response.getOutputStream();
 			HSSFWorkbook wb = new HSSFWorkbook();
 			HSSFSheet sheet = wb.createSheet(name);
 			HSSFCellStyle style = wb.createCellStyle();
@@ -314,27 +314,28 @@ public class OrderAction {
 			) throws ParseException{
 		ModelAndView model = new ModelAndView("/order/order_search_excel");
 		try {
-			if(searchStartTime == null || searchEndTime == null){
-				model.addObject("message","时间为空");
-				return model;
-			}
-			model.addObject("searchStartTime",searchStartTime);
-			model.addObject("searchEndTime",searchEndTime);
-			Map<String, Long> map = new HashMap<String, Long>();
-			long start = Constant.YYYYMMDDHHMMSS_FOMAT.parse(searchStartTime + " 00:00:00").getTime();
-			long end = Constant.YYYYMMDDHHMMSS_FOMAT.parse(searchEndTime + " 23:59:59").getTime() + 1000;
 
-			map.put("searchStartTime", start);
-			map.put("searchEndTime", end);
-			List<Order> list = orderService.searchOrderList(map);
-			if(list == null || list.size() <= 0){
-				model.addObject("message","暂无信息");
-				return model;
-			}
-			model.addObject("list",list);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		if(searchStartTime == null || searchEndTime == null){
+			model.addObject("message","时间为空");
+			return model;
+		}
+		model.addObject("searchStartTime",searchStartTime);
+		model.addObject("searchEndTime",searchEndTime);
+		Map<String, Long> map = new HashMap<String, Long>();
+		long start = Constant.YYYYMMDDHHMMSS_FOMAT.parse(searchStartTime + " 00:00:00").getTime();
+		long end = Constant.YYYYMMDDHHMMSS_FOMAT.parse(searchEndTime + " 23:59:59").getTime() + 1000;
+
+		map.put("searchStartTime", start);
+		map.put("searchEndTime", end);
+		List<Order> list = orderService.searchOrderList(map);
+		if(list == null || list.size() <= 0){
+			model.addObject("message","暂无信息");
+			return model;
+		}
+		model.addObject("list",list);
 		return model;
 	}
 	
