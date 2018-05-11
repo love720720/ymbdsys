@@ -36,25 +36,29 @@ public class RoleAction {
 			@RequestParam(value = "ids", required = false) String ids
 			) {
 		int id = StringUtil.toInt(strId);
-		if(id <= 0){
-			return "redirect:/role/manageRole.htm";
-		}
-		rolePrivilegeService.delRolePrivilegeAsRoleId(id);
-		if(ids == null || ids.length() <= 0){
-			return "redirect:/role/manageRole.htm?id="+id;
-		}
-		String[] split = ids.split(",");
-		for (int i = 0; i < split.length; i++) {
-			int privilegeId = StringUtil.toInt(split[i]);
-			if(privilegeId > 0){
-				Privilege privilege = privilegeService.getPrivilege(privilegeId);
-				if(privilege != null){
-					RolePrivilege rolePrivilege = new RolePrivilege();
-					rolePrivilege.setRoleId(id);
-					rolePrivilege.setPrivilegeId(privilegeId);
-					rolePrivilegeService.insertRolePrivilege(rolePrivilege);
+		try {
+			if(id <= 0){
+				return "redirect:/role/manageRole.htm";
+			}
+			rolePrivilegeService.delRolePrivilegeAsRoleId(id);
+			if(ids == null || ids.length() <= 0){
+				return "redirect:/role/manageRole.htm?id="+id;
+			}
+			String[] split = ids.split(",");
+			for (int i = 0; i < split.length; i++) {
+				int privilegeId = StringUtil.toInt(split[i]);
+				if(privilegeId > 0){
+					Privilege privilege = privilegeService.getPrivilege(privilegeId);
+					if(privilege != null){
+						RolePrivilege rolePrivilege = new RolePrivilege();
+						rolePrivilege.setRoleId(id);
+						rolePrivilege.setPrivilegeId(privilegeId);
+						rolePrivilegeService.insertRolePrivilege(rolePrivilege);
+					}
 				}
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return "redirect:/role/manageRole.htm?id="+id;
 	}
@@ -62,45 +66,53 @@ public class RoleAction {
 	@RequestMapping(value = "/role/manageRole",method = RequestMethod.GET)
 	public ModelAndView manageRole(@RequestParam(value = "id", required = false) String strId) {
 		ModelAndView model = new ModelAndView("/role/role_manage");
-		int id = StringUtil.toInt(strId);
-		if(id <= 0){
-			return model;
-		}
-		Role role = roleService.getRole(id);
-		if(role != null){
-			List<Privilege> rolePrivilegeList = privilegeService.getRolePrivilege(id);
-			List<Privilege> privilegeList = privilegeService.privilegeList();
-			if(rolePrivilegeList != null && rolePrivilegeList.size() > 0 && privilegeList != null && privilegeList.size() > 0){
-				for (Privilege rolePrivilege : rolePrivilegeList) {
-					for (Privilege privilege : privilegeList) {
-						if(rolePrivilege.getId() == privilege.getId()){
-							privilege.setIsTrue(true);
+		try {
+			int id = StringUtil.toInt(strId);
+			if(id <= 0){
+				return model;
+			}
+			Role role = roleService.getRole(id);
+			if(role != null){
+				List<Privilege> rolePrivilegeList = privilegeService.getRolePrivilege(id);
+				List<Privilege> privilegeList = privilegeService.privilegeList();
+				if(rolePrivilegeList != null && rolePrivilegeList.size() > 0 && privilegeList != null && privilegeList.size() > 0){
+					for (Privilege rolePrivilege : rolePrivilegeList) {
+						for (Privilege privilege : privilegeList) {
+							if(rolePrivilege.getId() == privilege.getId()){
+								privilege.setIsTrue(true);
+							}
 						}
 					}
+					if(rolePrivilegeList.size() == privilegeList.size()){
+						model.addObject("allTrue", true);
+					}else{
+						model.addObject("allTrue", false);
+					}
 				}
-				if(rolePrivilegeList.size() == privilegeList.size()){
-					model.addObject("allTrue", true);
-				}else{
-					model.addObject("allTrue", false);
-				}
+				model.addObject("role", role);
+				model.addObject("privilegeList", privilegeList);
 			}
-			model.addObject("role", role);
-			model.addObject("privilegeList", privilegeList);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return model;
 	}
 	
 	@RequestMapping(value = "/role/deleteRole",method = RequestMethod.GET)
 	public String deleteRole(@RequestParam(value = "id", required = false) String strId) {
-		int id = StringUtil.toInt(strId);
-		if(id <= 0){
-			return "redirect:/role/roleList.htm";
-		}
-		Role role = roleService.getRole(id);
-		if(role != null){
-			int roleId = role.getId();
-			roleService.deleteRole(roleId);
-			rolePrivilegeService.delRolePrivilegeAsRoleId(roleId);
+		try {
+			int id = StringUtil.toInt(strId);
+			if(id <= 0){
+				return "redirect:/role/roleList.htm";
+			}
+			Role role = roleService.getRole(id);
+			if(role != null){
+				int roleId = role.getId();
+				roleService.deleteRole(roleId);
+				rolePrivilegeService.delRolePrivilegeAsRoleId(roleId);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return "redirect:/role/roleList.htm";
 	}
@@ -112,23 +124,27 @@ public class RoleAction {
 			@RequestParam(value = "level", required = false) String strLevel,
 			@RequestParam(value = "sort", required = false) String sort
 			) {
-		if(name == null || name.length() <= 0){
-			return "redirect:/role/roleList.htm";
-		}
-		int level = StringUtil.toInt(strLevel);
-		if(level < 0 || level > 4){
-			return "redirect:/role/roleList.htm";
-		}
-		int id = StringUtil.toInt(strId);
-		Role role = new Role();
-		role.setName(name);
-		role.setLevel(level);
-		role.setSort(StringUtil.toInt(sort));
-		if(id <= 0){
-			roleService.insertRole(role);
-		}else{
-			role.setId(id);
-			roleService.updateRole(role);
+		try {
+			if(name == null || name.length() <= 0){
+				return "redirect:/role/roleList.htm";
+			}
+			int level = StringUtil.toInt(strLevel);
+			if(level < 0 || level > 4){
+				return "redirect:/role/roleList.htm";
+			}
+			int id = StringUtil.toInt(strId);
+			Role role = new Role();
+			role.setName(name);
+			role.setLevel(level);
+			role.setSort(StringUtil.toInt(sort));
+			if(id <= 0){
+				roleService.insertRole(role);
+			}else{
+				role.setId(id);
+				roleService.updateRole(role);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return "redirect:/role/roleList.htm";
 	}
@@ -136,28 +152,36 @@ public class RoleAction {
 	@RequestMapping(value = "/role/editRole")
 	public ModelAndView editRole(@RequestParam(value = "id", required = false) String strId) {
 		ModelAndView model = new ModelAndView("/role/role_edit");
-		int id = StringUtil.toInt(strId);
-		if(id > 0){
-			Role role = roleService.getRole(id);
-			model.addObject("role",role);
+		try {
+			int id = StringUtil.toInt(strId);
+			if(id > 0){
+				Role role = roleService.getRole(id);
+				model.addObject("role",role);
+			}
+			model.addObject("roleLevels", Constant.ROLELEVELS);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		model.addObject("roleLevels", Constant.ROLELEVELS);
 		return model;
 	}
 	
 	@RequestMapping(value = "/role/roleList",method = RequestMethod.GET)
 	public ModelAndView roleList(@RequestParam(value = "pageIndex", required = false) String strPageIndex) {
-		int pageIndex = 1;
-		if(strPageIndex != null){
-			pageIndex = StringUtil.toInt(strPageIndex);
-		}
-		pageIndex = pageIndex <= 0 ? 1 : pageIndex;
-		int totalCount = roleService.getCount();
-		PageBean pageBean = Custom.getPageBean(totalCount,Constant.COUNT_10,pageIndex,Constant.PAGENUM_9,"roleList");
-		List<Role> list = roleService.roleList(pageBean);
 		ModelAndView model = new ModelAndView("/role/role_list");
-		model.addObject("pageBean",pageBean);
-		model.addObject("list",list);
+		try {
+			int pageIndex = 1;
+			if(strPageIndex != null){
+				pageIndex = StringUtil.toInt(strPageIndex);
+			}
+			pageIndex = pageIndex <= 0 ? 1 : pageIndex;
+			int totalCount = roleService.getCount();
+			PageBean pageBean = Custom.getPageBean(totalCount,Constant.COUNT_10,pageIndex,Constant.PAGENUM_9,"roleList");
+			List<Role> list = roleService.roleList(pageBean);
+			model.addObject("pageBean",pageBean);
+			model.addObject("list",list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return model;
 	}
 }

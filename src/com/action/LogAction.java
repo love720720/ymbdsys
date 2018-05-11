@@ -23,7 +23,11 @@ public class LogAction {
 	 
 	@RequestMapping(value = "/log/clearAccessLog")
 	public String clearAccessLog() {
-		logService.clearAccessLog();
+		try {
+			logService.clearAccessLog();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return "redirect:/log/accessLog.htm";
 	}
 	
@@ -31,16 +35,21 @@ public class LogAction {
 	public ModelAndView accessLog(
 			@RequestParam(value = "pageIndex", required = false) String strPageIndex//当前页
 			) {
-		int pageIndex = StringUtil.toInt(strPageIndex);
-		if(pageIndex < 0)
-			pageIndex = 0;
-
-		int totalCount = logService.getAccessCount();
-		PageBean pageBean = Custom.getPageBean(totalCount, Constant.COUNT_20,pageIndex,Constant.PAGENUM_9,"accessLog");
-		List<Log> list = logService.getAccessLog(pageBean);
 		ModelAndView model = new ModelAndView("/log/access_log");
-		model.addObject("list", list);
-		model.addObject("pageBean", pageBean);
+		try {
+			int pageIndex = StringUtil.toInt(strPageIndex);
+			if(pageIndex < 0) {
+				pageIndex = 0;
+			}
+
+			int totalCount = logService.getAccessCount();
+			PageBean pageBean = Custom.getPageBean(totalCount, Constant.COUNT_20,pageIndex,Constant.PAGENUM_9,"accessLog");
+			List<Log> list = logService.getAccessLog(pageBean);
+			model.addObject("list", list);
+			model.addObject("pageBean", pageBean);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return model;
 	}
 }

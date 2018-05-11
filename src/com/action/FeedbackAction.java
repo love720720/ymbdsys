@@ -33,8 +33,12 @@ public class FeedbackAction {
 			out.print(false);
 			return;
 		}
-		boolean b = Custom.sendBUGMail(StringUtil.toSql(content));
-		out.print(b);
+		try {
+			boolean b = Custom.sendBUGMail(StringUtil.toSql(content));
+			out.print(b);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return;
 	}
 }

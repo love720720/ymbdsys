@@ -15,7 +15,7 @@
 
 	<bean id="viewResolver"
 		class="org.springframework.web.servlet.view.InternalResourceViewResolver"
-		p:prefix="/WEB-INF/pag/" p:suffix=".jsp" />
+		p:prefix="/view" p:suffix=".jsp" />
 
 	<bean id="multipartResolver"
 		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">

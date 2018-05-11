@@ -25,19 +25,27 @@ public class ClassifyAction {
 	@RequestMapping(value = "/classify/editClassify",method = RequestMethod.GET)
 	public ModelAndView editClassify(@RequestParam(value = "id", required = false) String strId) {
 		ModelAndView model = new ModelAndView("/classify/classify_edit");
-		int id = StringUtil.toInt(strId);
-		if(id > 0){
-			Classify classify = classifyService.getClassify(id);
-			model.addObject("classify",classify);
+		try {
+			int id = StringUtil.toInt(strId);
+			if(id > 0){
+				Classify classify = classifyService.getClassify(id);
+				model.addObject("classify",classify);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return model;
 	}
 	
 	@RequestMapping(value = "/classify/classifyList")
 	public ModelAndView classifyList() {
-		List<Classify> list = classifyService.classifyList();
 		ModelAndView model = new ModelAndView("/classify/classify_list");
-		model.addObject("list",list);
+		try {
+			List<Classify> list = classifyService.classifyList();
+			model.addObject("list",list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return model;
 	}
 	
@@ -49,18 +57,22 @@ public class ClassifyAction {
 		if(name == null || name.length() <= 0){
 			return "redirect:/classify/classifyList.htm";
 		}
-		int id = StringUtil.toInt(strId);
-		name = StringUtil.toSql(name);
-		int sort = StringUtil.toInt(strSort);
-		
-		Classify classify = new Classify();
-		classify.setName(name);
-		classify.setSort(sort);
-		if(id <= 0){
-			classifyService.insertClassify(classify);
-		}else{
-			classify.setId(id);
-			classifyService.updateClassify(classify);
+		try {
+			int id = StringUtil.toInt(strId);
+			name = StringUtil.toSql(name);
+			int sort = StringUtil.toInt(strSort);
+
+			Classify classify = new Classify();
+			classify.setName(name);
+			classify.setSort(sort);
+			if(id <= 0){
+				classifyService.insertClassify(classify);
+			}else{
+				classify.setId(id);
+				classifyService.updateClassify(classify);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return "redirect:/classify/classifyList.htm";
 	}
@@ -71,11 +83,15 @@ public class ClassifyAction {
 		if(id <= 0){
 			return "redirect:/classify/classifyList.htm";
 		}
-		Classify classify = classifyService.getClassify(id);
-		if(classify != null){
-			int clsaaifyId = classify.getId();
-			classifyService.deleteClassify(clsaaifyId);
-			productService.deleteProductAsClassify(clsaaifyId);
+		try {
+			Classify classify = classifyService.getClassify(id);
+			if(classify != null){
+				int clsaaifyId = classify.getId();
+				classifyService.deleteClassify(clsaaifyId);
+				productService.deleteProductAsClassify(clsaaifyId);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return "redirect:/classify/classifyList.htm";
 	}

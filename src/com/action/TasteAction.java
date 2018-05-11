@@ -21,9 +21,13 @@ public class TasteAction {
 	
 	@RequestMapping(value = "/taste/tasteList",method = RequestMethod.GET)
 	public ModelAndView tasteList() {
-		List<Taste> list = tasteService.tasteList();
 		ModelAndView model = new ModelAndView("/taste/taste_list");
-		model.addObject("list",list);
+		try {
+			List<Taste> list = tasteService.tasteList();
+			model.addObject("list",list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return model;
 	}
 	
@@ -38,20 +42,24 @@ public class TasteAction {
 			@RequestParam(value = "id", required = false) String strId,
 			@RequestParam(value = "name", required = false) String name,
 			@RequestParam(value = "strSort", required = false) String strSort) {
-		int id = StringUtil.toInt(strId);
-		if(name == null || name.length() <= 0){
-			return "redirect:/taste/tasteList.htm";
-		}
-		Taste taste = new Taste();
-		if(id <= 0){
-			taste.setName(StringUtil.toSql(name.trim()));
-			taste.setSort(StringUtil.toInt(strSort));
-			tasteService.insertTaste(taste);
-		}else{
-			taste.setId(id);
-			taste.setName(StringUtil.toSql(name.trim()));
-			taste.setSort(StringUtil.toInt(strSort));
-			tasteService.updateTaste(taste);
+		try {
+			int id = StringUtil.toInt(strId);
+			if(name == null || name.length() <= 0){
+				return "redirect:/taste/tasteList.htm";
+			}
+			Taste taste = new Taste();
+			if(id <= 0){
+				taste.setName(StringUtil.toSql(name.trim()));
+				taste.setSort(StringUtil.toInt(strSort));
+				tasteService.insertTaste(taste);
+			}else{
+				taste.setId(id);
+				taste.setName(StringUtil.toSql(name.trim()));
+				taste.setSort(StringUtil.toInt(strSort));
+				tasteService.updateTaste(taste);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return "redirect:/taste/tasteList.htm";
 	}
@@ -59,18 +67,26 @@ public class TasteAction {
 	@RequestMapping(value = "/taste/updateTaste",method = RequestMethod.GET)
 	public ModelAndView updateTaste(@RequestParam(value = "id", required = false) String strId) {
 		ModelAndView model = new ModelAndView("/taste/taste_edit");
-		Taste taste = tasteService.getTaste(StringUtil.toInt(strId));
-		model.addObject("taste",taste);
+		try {
+			Taste taste = tasteService.getTaste(StringUtil.toInt(strId));
+			model.addObject("taste",taste);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return model;
 	}
 	
 	@RequestMapping(value = "/taste/deleteTaste",method = RequestMethod.GET)
 	public String deleteTaste(@RequestParam(value = "id", required = false) String strId) {
-		int id = StringUtil.toInt(strId);
-		if(id <= 0){
-			return "redirect:/taste/tasteList.htm";
+		try {
+			int id = StringUtil.toInt(strId);
+			if(id <= 0){
+				return "redirect:/taste/tasteList.htm";
+			}
+			tasteService.deleteTaste(id);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		tasteService.deleteTaste(id);
 		return "redirect:/taste/tasteList.htm";
 	}
 }

@@ -3474,6 +3474,7 @@ CREATE TABLE `product` (
   `image_name` varchar(200) DEFAULT NULL,
   `image_file_name` varchar(200) DEFAULT NULL,
   `record` varchar(255) DEFAULT NULL,
+  `recommend` int(1) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT;
 

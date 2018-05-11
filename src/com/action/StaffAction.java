@@ -44,24 +44,28 @@ public class StaffAction {
 			HttpServletResponse response,
 			@RequestParam(value = "name", required = false) String name
 			) throws IOException {
-		response.setCharacterEncoding("UTF-8");
-		PrintWriter out = response.getWriter();
-		StringBuilder json = new StringBuilder();
-		json.append("{\"isTrue\":");
-		if(name == null || name.length() <= 0){
-			json.append(false).append(",\"param\":\"名称为空 请返回重试\"}");
+		try {
+			response.setCharacterEncoding("UTF-8");
+			PrintWriter out = response.getWriter();
+			StringBuilder json = new StringBuilder();
+			json.append("{\"isTrue\":");
+			if(name == null || name.length() <= 0){
+				json.append(false).append(",\"param\":\"名称为空 请返回重试\"}");
+				out.print(json);
+				return;
+			}
+			String userName = PinYinUtil.converterToSpell(name);
+			Staff staff = staffInfoService.getStaffAsName(userName);
+			if(staff != null){
+				json.append(false).append(",\"param\":\"用户名已经存在 请重新填写\"}");
+				out.print(json);
+				return;
+			}
+			json.append(true).append(",\"param\":\"").append(userName).append("\"}");
 			out.print(json);
-			return;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		String userName = PinYinUtil.converterToSpell(name);
-		Staff staff = staffInfoService.getStaffAsName(userName);
-		if(staff != null){
-			json.append(false).append(",\"param\":\"用户名已经存在 请重新填写\"}");
-			out.print(json);
-			return;
-		}
-		json.append(true).append(",\"param\":\"").append(userName).append("\"}");
-		out.print(json);
 		return;
 	}
 	
@@ -74,41 +78,45 @@ public class StaffAction {
 			@RequestParam(value = "phone", required = false) String phone,
 			@RequestParam(value = "email", required = false) String email
 			) throws IOException {
-		PrintWriter out = response.getWriter();
-		if(name == null || userName == null || name.length() < 2 || name.length() > 16){
-			out.print(false);
-			return;
+		try {
+			PrintWriter out = response.getWriter();
+			if(name == null || userName == null || name.length() < 2 || name.length() > 16){
+				out.print(false);
+				return;
+			}
+			String password = Constant.PASSWORD;
+			if(email != null && email.length() > 0){
+				password = Custom.getPassword();
+			}
+			String passwordMd5 = PasswordMD5.encryptionStaffPassword(password);
+			StaffInfo staffInfo = new StaffInfo();
+			staffInfo.setGender(StringUtil.toInt(strGender));
+			staffInfo.setName(name);
+			staffInfo.setPhone(phone);
+			staffInfo.setLastLoginTime(Constant.LONGINIT);
+			int i = staffInfoService.insertStaffInfo(staffInfo);
+			if(i <= 0){
+				out.print(false);
+				return;
+			}
+			int id = staffInfo.getId();
+			Staff staff = new Staff();
+			staff.setPassword(passwordMd5);
+			staff.setRegisterTime(System.currentTimeMillis());
+			staff.setStaffInfoId(id);
+			staff.setUserName(userName);
+			staff.setStat(Constant.STAFF_ACTIVATE);
+			i = staffInfoService.insertStaff(staff);
+			if(i <= 0){
+				staffInfoService.deleteStaffInfo(id);
+				out.print(false);
+				return;
+			}
+			Custom.sendStaffPassword(email, password);
+			out.print(true);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		String password = Constant.PASSWORD;
-		if(email != null && email.length() > 0){
-			password = Custom.getPassword();
-		}
-		String passwordMd5 = PasswordMD5.encryptionStaffPassword(password);
-		StaffInfo staffInfo = new StaffInfo();
-		staffInfo.setGender(StringUtil.toInt(strGender));
-		staffInfo.setName(name);
-		staffInfo.setPhone(phone);
-		staffInfo.setLastLoginTime(Constant.LONGINIT);
-		int i = staffInfoService.insertStaffInfo(staffInfo);
-		if(i <= 0){
-			out.print(false);
-			return;
-		}
-		int id = staffInfo.getId();
-		Staff staff = new Staff();
-		staff.setPassword(passwordMd5);
-		staff.setRegisterTime(System.currentTimeMillis());
-		staff.setStaffInfoId(id);
-		staff.setUserName(userName);
-		staff.setStat(Constant.STAFF_ACTIVATE);
-		i = staffInfoService.insertStaff(staff);
-		if(i <= 0){
-			staffInfoService.deleteStaffInfo(id);
-			out.print(false);
-			return;
-		}
-		Custom.sendStaffPassword(email, password);
-		out.print(true);
 		return;
 	}
 	
@@ -119,39 +127,43 @@ public class StaffAction {
 			@RequestParam(value = "oldPassword", required = false) String oldPassword,
 			@RequestParam(value = "newPassword", required = false) String newPassword
 			) throws IOException {
-		response.setCharacterEncoding("UTF-8");
-		PrintWriter out = response.getWriter();
-		StringBuilder json = new StringBuilder();
-		json.append("{\"isTrue\":");
-		if(oldPassword == null || newPassword == null){
-			json.append(false).append(",\"param\":\"").append("密码为空 请重试").append("\"}");
+		try {
+			response.setCharacterEncoding("UTF-8");
+			PrintWriter out = response.getWriter();
+			StringBuilder json = new StringBuilder();
+			json.append("{\"isTrue\":");
+			if(oldPassword == null || newPassword == null){
+				json.append(false).append(",\"param\":\"").append("密码为空 请重试").append("\"}");
+				out.print(json);
+				return;
+			}
+			HttpSession session = request.getSession();
+			StaffInfo staffInfo = (StaffInfo)session.getAttribute(Constant.STAFF);
+			if(staffInfo == null){
+				json.append(false).append(",\"param\":\"").append("未获取用户信息 请刷新重试").append("\"}");
+				out.print(json);
+				return;
+			}
+			oldPassword = PasswordMD5.encryptionStaffPassword(oldPassword);
+			if(!staffInfo.getPassword().endsWith(oldPassword)){
+				json.append(false).append(",\"param\":\"").append("原始密码不正确 请重试").append("\"}");
+				out.print(json);
+				return;
+			}
+			newPassword = PasswordMD5.encryptionStaffPassword(StringUtil.toSql(newPassword));
+			staffInfo.setPassword(newPassword);
+			int i = staffInfoService.updatePassword(staffInfo);
+			if(i <= 0){
+				json.append(false).append(",\"param\":\"").append("密码修改失败 请重试").append("\"}");
+				out.print(json);
+				return;
+			}
+			session.removeAttribute(Constant.STAFF);
+			json.append(true).append(",\"param\":\"").append("密码修改成功 请重新登录").append("\"}");
 			out.print(json);
-			return;
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		HttpSession session = request.getSession();
-		StaffInfo staffInfo = (StaffInfo)session.getAttribute(Constant.STAFF);
-		if(staffInfo == null){
-			json.append(false).append(",\"param\":\"").append("未获取用户信息 请刷新重试").append("\"}");
-			out.print(json);
-			return;
-		}
-		oldPassword = PasswordMD5.encryptionStaffPassword(oldPassword);
-		if(!staffInfo.getPassword().endsWith(oldPassword)){
-			json.append(false).append(",\"param\":\"").append("原始密码不正确 请重试").append("\"}");
-			out.print(json);
-			return;
-		}
-		newPassword = PasswordMD5.encryptionStaffPassword(StringUtil.toSql(newPassword));
-		staffInfo.setPassword(newPassword);
-		int i = staffInfoService.updatePassword(staffInfo);
-		if(i <= 0){
-			json.append(false).append(",\"param\":\"").append("密码修改失败 请重试").append("\"}");
-			out.print(json);
-			return;
-		}
-		session.removeAttribute(Constant.STAFF);
-		json.append(true).append(",\"param\":\"").append("密码修改成功 请重新登录").append("\"}");
-		out.print(json);
 		return;
 	}
 	
@@ -160,18 +172,22 @@ public class StaffAction {
 			@RequestParam(value = "id", required = false) String strId,
 			@RequestParam(value = "roleId", required = false) String strRoleId
 			) {
-		int id = StringUtil.toInt(strId);
-		int roleId = StringUtil.toInt(strRoleId);
-		if(id > 0 && roleId > 0){
-			StaffInfo staffInfo = staffInfoService.getStaffInfoAsId(id);
-			Role role = roleService.getRole(roleId);
-			if(staffInfo != null && role != null){
-				StaffInfoRole staffInfoRole = new StaffInfoRole();
-				staffInfoRole.setRoleId(roleId);
-				staffInfoRole.setStaffInfoId(id);
-				staffInfoRoleService.deleteStaffInfoRoleAsStaffId(id);
-				staffInfoRoleService.insertStaffInfoRole(staffInfoRole);
+		try {
+			int id = StringUtil.toInt(strId);
+			int roleId = StringUtil.toInt(strRoleId);
+			if(id > 0 && roleId > 0){
+				StaffInfo staffInfo = staffInfoService.getStaffInfoAsId(id);
+				Role role = roleService.getRole(roleId);
+				if(staffInfo != null && role != null){
+					StaffInfoRole staffInfoRole = new StaffInfoRole();
+					staffInfoRole.setRoleId(roleId);
+					staffInfoRole.setStaffInfoId(id);
+					staffInfoRoleService.deleteStaffInfoRoleAsStaffId(id);
+					staffInfoRoleService.insertStaffInfoRole(staffInfoRole);
+				}
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return "redirect:/staff/staffList.htm";
 	}
@@ -179,22 +195,30 @@ public class StaffAction {
 	@RequestMapping(value = "/staff/manageStaff",method = RequestMethod.GET)
 	public ModelAndView manageStaff(@RequestParam(value = "id", required = false) String strId) {
 		ModelAndView model = new ModelAndView("/staff/staff_manage");
-		int id = StringUtil.toInt(strId);
-		if(id > 0){
-			StaffInfo staffInfo = staffInfoService.getStaffInfoAsId(id);
-			List<Role> roleList = roleService.getRoleList();
-			model.addObject("staffInfo", staffInfo);
-			model.addObject("roleList", roleList);
+		try {
+			int id = StringUtil.toInt(strId);
+			if(id > 0){
+				StaffInfo staffInfo = staffInfoService.getStaffInfoAsId(id);
+				List<Role> roleList = roleService.getRoleList();
+				model.addObject("staffInfo", staffInfo);
+				model.addObject("roleList", roleList);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return model;
 	}
 	
 	@RequestMapping(value = "/staff/staffCenter",method = RequestMethod.GET)
 	public ModelAndView staffCenter(HttpServletRequest request) {
-		HttpSession session = request.getSession();
-		StaffInfo staffInfo = (StaffInfo)session.getAttribute(Constant.STAFF);
 		ModelAndView model = new ModelAndView("/staff/staff_center");
-		model.addObject("staffInfo",staffInfo);
+		try {
+			HttpSession session = request.getSession();
+			StaffInfo staffInfo = (StaffInfo)session.getAttribute(Constant.STAFF);
+			model.addObject("staffInfo",staffInfo);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return model;
 	}
 	
@@ -220,17 +244,21 @@ public class StaffAction {
 	
 	@RequestMapping(value = "/staff/staffList")
 	public ModelAndView classifyList(@RequestParam(value = "pageIndex", required = false) String strPageIndex) {
-		int pageIndex = 1;
-		if(strPageIndex != null){
-			pageIndex = StringUtil.toInt(strPageIndex);
-		}
-		pageIndex = pageIndex <= 0 ? 1 : pageIndex;
-		int totalCount = staffInfoService.getCount();
-		PageBean pageBean = Custom.getPageBean(totalCount,Constant.COUNT_10,pageIndex,Constant.PAGENUM_9,"staffList");
-		List<StaffInfo> list = staffInfoService.staffInfoList(pageBean);
 		ModelAndView model = new ModelAndView("/staff/staff_list");
-		model.addObject("pageBean",pageBean);
-		model.addObject("list",list);
+		try {
+			int pageIndex = 1;
+			if(strPageIndex != null){
+				pageIndex = StringUtil.toInt(strPageIndex);
+			}
+			pageIndex = pageIndex <= 0 ? 1 : pageIndex;
+			int totalCount = staffInfoService.getCount();
+			PageBean pageBean = Custom.getPageBean(totalCount,Constant.COUNT_10,pageIndex,Constant.PAGENUM_9,"staffList");
+			List<StaffInfo> list = staffInfoService.staffInfoList(pageBean);
+			model.addObject("pageBean",pageBean);
+			model.addObject("list",list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return model;
 	}
 	
@@ -240,36 +268,40 @@ public class StaffAction {
 			HttpServletResponse response,
 			@RequestParam(value = "id", required = false) String strId
 			) throws IOException {
-		PrintWriter out = response.getWriter();
-		int id = StringUtil.toInt(strId);
-		if(id <= 0){
-			out.print(false);
-			return;
+		try {
+			PrintWriter out = response.getWriter();
+			int id = StringUtil.toInt(strId);
+			if(id <= 0){
+				out.print(false);
+				return;
+			}
+			Staff staff = staffInfoService.getStaff(id);
+			if(staff == null){
+				out.print(false);
+				return;
+			}
+			Object object = request.getSession().getAttribute(Constant.STAFF);
+			if(object == null){
+				out.print(false);
+				return;
+			}
+			StaffInfo sessionStaffInfo  = (StaffInfo )object;
+			if(sessionStaffInfo .getId() == staff.getStaffInfoId()){
+				out.print(false);
+				return;
+			}
+			int stat = staff.getStat();
+			stat = stat == Constant.STAFF_ACTIVATE ? Constant.STAFF_DESTROY : Constant.STAFF_ACTIVATE;
+			staff.setStat(stat);
+			int i = staffInfoService.updateStaff(staff);
+			if(i <= 0){
+				out.print(false);
+				return;
+			}
+			out.print(true);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		Staff staff = staffInfoService.getStaff(id);
-		if(staff == null){
-			out.print(false);
-			return;
-		}
-		Object object = request.getSession().getAttribute(Constant.STAFF);
-		if(object == null){
-			out.print(false);
-			return;
-		}
-		StaffInfo sessionStaffInfo  = (StaffInfo )object;
-		if(sessionStaffInfo .getId() == staff.getStaffInfoId()){
-			out.print(false);
-			return;
-		}
-		int stat = staff.getStat();
-		stat = stat == Constant.STAFF_ACTIVATE ? Constant.STAFF_DESTROY : Constant.STAFF_ACTIVATE;
-		staff.setStat(stat);
-		int i = staffInfoService.updateStaff(staff);
-		if(i <= 0){
-			out.print(false);
-			return;
-		}
-		out.print(true);
 		return;
 	}
 }

@@ -48,60 +48,64 @@ public class LoginAction {
 			@RequestParam(value = "loginUserName", required = false) String loginUserName,
 			@RequestParam(value = "loginUserPassword", required = false) String loginUserPassword
 			) throws IOException {
-		PrintWriter out = response.getWriter();
-		String userName = StringUtil.toSql(loginUserName);
-		String password = StringUtil.toSql(loginUserPassword);
-		if(userName == null || password == null || userName.length() <= 0 || password.length() <= 0){
-			out.print(false);
-			return;
-		}
-		password = PasswordMD5.encryptionStaffPassword(password);
-		Staff staff = new Staff();
-		staff.setUserName(userName);
-		staff.setPassword(password);
-		staff.setStat(Constant.STAFF_ACTIVATE);
-		StaffInfo staffInfo = staffInfoService.getStaffInfo(staff);
-		if(staffInfo == null){
-			out.print(false);
-			return;
-		}
-		String loginTimeStr = staffInfo.getLastLoginTimeStr();
-		staffInfo.setLastLoginTime(System.currentTimeMillis());
-		staffInfoService.updateLastLoginTime(staffInfo);
-		Date date = new Date(staffInfo.getLastLoginTime());
-		staffInfo.setLoginTimeStr(loginTimeStr);
-		staffInfo.setLastLoginTimeStr(Constant.YYYYMMDDHHMMSS_FOMAT.format(date));
-		HttpSession session = request.getSession();
-		
-		List<Privilege> privilegeList  = privilegeService.getStaffPrivilege(staffInfo.getId());
-		List<Tree> treeList = new ArrayList<Tree>();
-		List<Button> buttonList = new ArrayList<Button>();
-		if(privilegeList != null && privilegeList.size() > 0){
-			for (Privilege privilege : privilegeList) {
-				boolean isTrue = privilege.getIsTrue();
-				boolean display = privilege.getDisplay();
-				if(isTrue && display && privilege.getIsTree()){
-					Tree tree = new Tree();
-					tree.setId(privilege.getId());
-					tree.setName(privilege.getName());
-					tree.setParentId(privilege.getParentId());
-					tree.setSort(privilege.getSort());
-					tree.setTarget(privilege.getTarget());
-					tree.setUrl(privilege.getUrl());
-					treeList.add(tree);
-				}
-				if(isTrue && display && privilege.getIsButton()){
-					Button button = new Button();
-					button.setCode(privilege.getCode());
-					buttonList.add(button);
+		try {
+			PrintWriter out = response.getWriter();
+			String userName = StringUtil.toSql(loginUserName);
+			String password = StringUtil.toSql(loginUserPassword);
+			if(userName == null || password == null || userName.length() <= 0 || password.length() <= 0){
+				out.print(false);
+				return;
+			}
+			password = PasswordMD5.encryptionStaffPassword(password);
+			Staff staff = new Staff();
+			staff.setUserName(userName);
+			staff.setPassword(password);
+			staff.setStat(Constant.STAFF_ACTIVATE);
+			StaffInfo staffInfo = staffInfoService.getStaffInfo(staff);
+			if(staffInfo == null){
+				out.print(false);
+				return;
+			}
+			String loginTimeStr = staffInfo.getLastLoginTimeStr();
+			staffInfo.setLastLoginTime(System.currentTimeMillis());
+			staffInfoService.updateLastLoginTime(staffInfo);
+			Date date = new Date(staffInfo.getLastLoginTime());
+			staffInfo.setLoginTimeStr(loginTimeStr);
+			staffInfo.setLastLoginTimeStr(Constant.YYYYMMDDHHMMSS_FOMAT.format(date));
+			HttpSession session = request.getSession();
+
+			List<Privilege> privilegeList  = privilegeService.getStaffPrivilege(staffInfo.getId());
+			List<Tree> treeList = new ArrayList<Tree>();
+			List<Button> buttonList = new ArrayList<Button>();
+			if(privilegeList != null && privilegeList.size() > 0){
+				for (Privilege privilege : privilegeList) {
+					boolean isTrue = privilege.getIsTrue();
+					boolean display = privilege.getDisplay();
+					if(isTrue && display && privilege.getIsTree()){
+						Tree tree = new Tree();
+						tree.setId(privilege.getId());
+						tree.setName(privilege.getName());
+						tree.setParentId(privilege.getParentId());
+						tree.setSort(privilege.getSort());
+						tree.setTarget(privilege.getTarget());
+						tree.setUrl(privilege.getUrl());
+						treeList.add(tree);
+					}
+					if(isTrue && display && privilege.getIsButton()){
+						Button button = new Button();
+						button.setCode(privilege.getCode());
+						buttonList.add(button);
+					}
 				}
 			}
+			staffInfo.setPrivilegeList(privilegeList);
+			session.setAttribute(Constant.STAFF, staffInfo);
+			session.setAttribute(Constant.TREELIST, treeList);
+			session.setAttribute(Constant.BUTTONLIST, buttonList);
+			out.print(true);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		staffInfo.setPrivilegeList(privilegeList);
-		session.setAttribute(Constant.STAFF, staffInfo);
-		session.setAttribute(Constant.TREELIST, treeList);
-		session.setAttribute(Constant.BUTTONLIST, buttonList);
-		out.print(true);
 		return;
 	}
 	
